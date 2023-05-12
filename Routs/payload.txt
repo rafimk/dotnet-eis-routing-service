@@ -1,0 +1,75 @@
+{"eventId":"84f99434-ece8-40b4-bc7a-a79cd771c159","eventType":"ITEM_CREATED","createdDate":"10-05-2023 01:15:54","sourceSystemName":"SCM_ITEM_MANAGEMENT","traceId":"8eb1c1dd-611f-4cc2-9826-8ea6e3183ff7","spanId":"26c5cb5b-4eb8-4800-9c4d-0ee3bc27c6ec","payload":{"changedAttributes":null,"content":{"id":"b8cd24b4-7aa0-45ba-fd24-08db51372777","partNumber":"Tarmeez-Item-RAFI-0001","description":"Tarmeez-Item-Description","arabicDescription":null,"manufactureId":"522a1ecf-100a-44b5-bd37-b7eed47dfe0e","nationalStockNumber":"1520-11-111-0818","manufacturepartNumber":null,"vendorPartNumber":null,"unitOfIssueId":"a20d519f-1c84-492b-a54f-a7cc8253bbc9","itemCategoryId":"c7852f36-0681-4a43-bcd9-5f6a638eed26","itemSubCategoryId":null,"internalFamilyId":"5f680c8a-6dd0-4796-b04d-8f0ea10cde11","serializableStatusId":"4bbe4704-2f05-4bec-b668-b36098cdf2b9","itemClassId":"d637660b-c822-4d4b-82f1-baf681974fa1","eccnNumber":null,"itemFamilyId":"74f52c99-52b5-4463-bf52-6a9427fc0ec1","itemSubFamilyId":"0967605f-986b-4199-b737-b8607f5a17e0","itemGroupId":null,"itemSubGroupId":null,"tarmeezNumber":null,"tadbeerNumber":null,"isCommonItem":false,"itemStatus":1,"obsoleteRemarks":" ","activateRemarks":" ","deactivateRemarks":" ","isTZLinkInitiated":false,"isDeleted":false},"oldContent":null,"contentType":"ITEM_CREATED","sourceSystemName":"SCM_ITEM_MANAGEMENT"}}
+
+
+  public class JsonSerializerUtil
+    {
+
+        public static string SerializeEvent(object message)
+        {
+            var serializerOptions = new JsonSerializerOptions
+            {
+                Converters = { new DateTimeJsonBehaviour() },
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+            string JsonString = JsonSerializer.Serialize(message, serializerOptions);
+            return JsonString;
+        }
+
+        public static TOutput DeserializeObject<TOutput>(string message)
+        {
+            try
+            {
+                var serializerOptions = new JsonSerializerOptions
+                {
+                    Converters = { new DateTimeJsonBehaviour() },
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase                   
+                };
+                TOutput tOutput = JsonSerializer.Deserialize<TOutput>(message, serializerOptions);
+                return tOutput;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async static ValueTask<TOutput> DeserializeObjectAsync<TOutput>(string message, CancellationToken token)
+        {
+
+            var serializerOptions = new JsonSerializerOptions
+            {
+                Converters = { new DateTimeJsonBehaviour() },
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+               
+
+            };
+            try
+            {
+                byte[] byteArray = JsonSerializer.SerializeToUtf8Bytes(message);
+                Stream memoryStream = new MemoryStream(byteArray);
+                var awaitedComponent = await JsonSerializer.DeserializeAsync<TOutput>(memoryStream, serializerOptions, token);
+                if (awaitedComponent == null)
+                {
+                    Console.WriteLine("Payload is null");
+                }
+                return awaitedComponent;
+            }
+            catch
+            {
+                await Console.Out.WriteLineAsync("Error occurred while converting to JSON");
+                throw;
+            }
+        }
+    }
+}
+
+ public class DateTimeJsonBehaviour : JsonConverter<DateTime>
+    {
+        private readonly string dateFormat = "dd-MM-yyyy hh:mm:ss";
+
+        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+            DateTime.ParseExact(reader.GetString(), dateFormat, CultureInfo.InvariantCulture);
+
+        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) => writer.WriteStringValue(value.ToString(dateFormat, CultureInfo.InvariantCulture));
+
+    }
